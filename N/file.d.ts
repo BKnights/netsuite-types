@@ -45,7 +45,13 @@ interface FileCreateOptions {
     /**
      * The internal ID of the folder used when the file is saved.
      */
-    folder?: number
+    folder?: number | string;
+
+    description? : string;
+    isOnline?:boolean;
+    isInactive?:boolean;
+    encoding?:string;
+
 }
 
 /**

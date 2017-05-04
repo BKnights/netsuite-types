@@ -88,7 +88,7 @@ interface AddResetButtonOptions {
     label: string;
 }
 
-export interface AddSelectOptionOptions {
+interface AddSelectOptionOptions {
     value: string;
     text: string;
     isSelected?: boolean;

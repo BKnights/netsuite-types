@@ -6,6 +6,22 @@ interface CheckStatusOptions {
 
 interface TaskCreateOptions {
     taskType: TaskType;
+    scriptId? :number | string;
+    deploymentId?:number|string;
+    params?: any;
+    importFile? : File | string;
+    mappingId?:number|string;
+    queuId? : number|string;
+    name? : string;
+    linkedFiles? : Object;
+    entityType? : string;
+    masterRecordId? : number;
+    masterSelectionMode? : string;
+    dedupeMode? : string;
+    recordIds? : number[];
+    recordType? : string;
+    recordId? : number;
+    workflowId? : number | string;
 }
 
 interface CsvImportTask {

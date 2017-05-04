@@ -1,5 +1,10 @@
+interface LogArg {
+    title?: string;
+    details: any;
+}
+
 interface LogFunction {
-    (title: string, details: any);
+	(options:LogArg): null;
 }
 
 export var debug: LogFunction;
