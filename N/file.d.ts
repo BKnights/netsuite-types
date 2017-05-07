@@ -50,7 +50,7 @@ interface FileCreateOptions {
     description? : string;
     isOnline?:boolean;
     isInactive?:boolean;
-    encoding?:string;
+    encoding?:Encoding;
 
 }
 
