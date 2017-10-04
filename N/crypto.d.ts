@@ -18,7 +18,7 @@ interface Cipher {
  * Encapsulates a cipher payload.
  */
 interface CipherPayload {
-  encoding: string;
+  encoding: string | Encoding;
   iv: number;
 }
 
@@ -57,14 +57,14 @@ interface Hmac {
 
 interface SecretKey {
   guid: string;
-  encoding: string;
+  encoding: string | Encoding;
 }
 
 interface FinalOptions {
   /**
    * The output encoding for a crypto.CipherPayload object.
    */
-  outputEncoding: string;
+  outputEncoding: string | Encoding;
 }
 
 interface UpdateOptions {
@@ -136,7 +136,7 @@ interface CreateHmacOptions {
 
 interface CreateSecretKeyOptions {
   guid: string;
-  encoding: string;
+  encoding: string | Encoding;
 }
 
 export declare enum EncryptionAlg {
