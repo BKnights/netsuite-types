@@ -31,6 +31,16 @@ interface AddCredentialFieldOptions {
     container?: string;
 }
 
+interface AddSecretKeyFieldOptions{
+   /** The internal ID of the credential field. The internal ID must be in lowercase, contain no spaces, and include the prefix custpage if you are adding the field to an existing page. */
+    id: string;
+    /** The label for the credential field. */
+    label: string;
+    restrictToCurrentUser?: boolean;
+    /** The ID of the script that is allowed to use this credential field. For example, 'customscript_my_script'. */
+    restrictToScriptIds?: string | string[];
+}
+
 interface AddFieldGroupOptions {
     /** An internal ID for the field group. */
     id: string;
@@ -421,6 +431,7 @@ export interface Form extends BaseForm {
     /** Adds a button to a form. */
     addButton(options: AddButtonOptions): Button;
     addCredentialField(options: AddCredentialFieldOptions): Field;
+    addSecretKeyField(options: AddSecretKeyFieldOptions): Field;
     addFieldGroup(options: AddFieldGroupOptions): FieldGroup;
     addPageLink(options: AddPageLinkOptions): void;
     addResetButton(options: AddResetButtonOptions): Button;
