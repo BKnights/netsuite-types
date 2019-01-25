@@ -65,7 +65,7 @@ interface FileCreateOptions {
     /**
      * The internal ID of the folder used when the file is saved.
      */
-    folder?: number;
+    folder?: number | string;
     /**
      * The file encoding.
      */
