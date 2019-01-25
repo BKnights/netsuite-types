@@ -6,11 +6,24 @@
     "url": "git+ssh://git@github.com/headintheclouddev/typings-suitescript-2.0.git"
   },
   "homepage": "https://github.com/headintheclouddev/typings-suitescript-2.0",
-  "version": "2016.2.25",
+  "version": "2018.2.14",
   "main": "index.d.ts",
   "author": "Head in the Cloud Development",
   "license": "MIT",
   "devDependencies": {
-    "typescript": "^2.0.2"
+    "@types/esprima": "^4.0.1",
+    "@types/jasmine": "^2.8.2",
+    "@types/node": "^8.0.55",
+    "@types/shelljs": "^0.7.6",
+    "esprima": "^4.0.0",
+    "jasmine": "^2.8.0",
+    "shelljs": "^0.7.8",
+    "typescript": "^2.6.2"
+  },
+  "scripts": {
+    "cleanup": "node -e \"var shelljs = require('shelljs'); shelljs.config.silent = true; shelljs.rm('spec/*.js');\"",
+    "pretest": "npm run cleanup",
+    "test": "node node_modules/typescript/bin/tsc -p spec/specs_specs_tsconfig.json && node node_modules/jasmine/bin/jasmine.js",
+    "posttest": "npm run cleanup"
   }
 }

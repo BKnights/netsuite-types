@@ -1,6 +1,4 @@
-
-import { Sublist } from './ui/serverWidget';
-import { Operator } from './search';
+import { AddSelectOptionOptions, Sublist } from './ui/serverWidget';
 
 interface RecordSaveFunction {
     (options?: SubmitConfig): number;
@@ -8,28 +6,18 @@ interface RecordSaveFunction {
 }
 
 interface AttachOptions {
-    /**
-     * The record to attach.
-     */
+    /** The record to attach. */
     record: AttachRecordOptions;
-    /**
-     * The record that the options.record gets attached to.
-     */
+    /** The record that the options.record gets attached to. */
     to: AttachRecordOptions;
-    /**
-     * The name-value pairs containing attributes for the attachment.
-     */
+    /** The name-value pairs containing attributes for the attachment. */
     attributes?: any;
 }
 
 interface AttachRecordOptions {
-    /**
-     * The type of record to attach.
-     */
+    /** The type of record to attach. */
     type: Type | string;
-    /**
-     * The internal ID of the record to attach.
-     */
+    /** The internal ID of the record to attach. */
     id: number | string;
 }
 
@@ -38,32 +26,10 @@ interface CancelCommitLineOptions {
     sublistId: string;
 }
 
-interface ClientSetValueOptions {
-    /** The internal ID of a standard or custom body field. */
-    fieldId: string;
-    /**
-     * The value to set the field to.
-     * The value type must correspond to the field type being set. For example:
-     * - Text, Radio and Select fields accept string values.
-     * - Checkbox fields accept Boolean values.
-     * - Date and DateTime fields accept Date values.
-     * - Integer, Float, Currency and Percent fields accept number values.
-     */
-    value: boolean | string | number | Date | string[];
-    /** If set to true, the field change and slaving event is ignored. */
-    ignoreFieldChange?: boolean;
-    /** Documented in N/currentRecord. Set to true to synchronously set this value and its sourced values before returning. */
-    fireSlavingSync?: boolean;
-}
-
 interface CopyLoadOptions {
-    /**
-     * The record type.
-     */
+    /** The record type. */
     type: Type | string;
-    /**
-     * The internal ID of the existing record instance in NetSuite.
-     */
+    /** The internal ID of the existing record instance in NetSuite. */
     id: number | string;
     /**
      * Determines whether the new record is dynamic. If set to true, the record is created in dynamic mode. If set to false, the record is created in standard mode. By default, this value is false.
@@ -73,9 +39,7 @@ interface CopyLoadOptions {
      * - When you work with a record in dynamic mode, it is important that you set values in the same order you would within the UI. If you fail to do this, your results may not be accurate.
      */
     isDynamic?: boolean;
-    /**
-     * Name-value pairs containing default values of fields in the new record.
-     */
+    /** Name-value pairs containing default values of fields in the new record. */
     defaultValue?: any;
 }
 
@@ -117,14 +81,14 @@ interface RecordGetLineCountOptions {
 interface GetMatrixHeaderCountOptions {
     /** The internal ID of the sublist that contains the matrix. */
     sublistId: string;
-    /** The intenral ID of the matrix field. */
+    /** The internal ID of the matrix field. */
     fieldId: string;
 }
 
 interface GetMatrixHeaderFieldOptions {
     /** The internal ID of the sublist that contains the matrix. */
     sublistId: string;
-    /** The intenral ID of the matrix field. */
+    /** The internal ID of the matrix field. */
     fieldId: string;
     /** The column number for the field. */
     column: number;
@@ -133,7 +97,7 @@ interface GetMatrixHeaderFieldOptions {
 interface GetMatrixSublistFieldOptions {
     /** The internal ID of the sublist that contains the matrix. */
     sublistId: string;
-    /** The intenral ID of the matrix field. */
+    /** The internal ID of the matrix field. */
     fieldId: string;
     /** The column number for the field. */
     column: number;
@@ -186,7 +150,7 @@ interface SetCurrentMatrixSublistValueOptions {
      * - Date and DateTime fields accept Date values.
      * - Integer, Float, Currency and Percent fields accept number values.
      */
-    value: boolean | string | number | Date | string[];
+    value: FieldValue;
     /** If set to true, the field change and slaving event is ignored. Default is false. */
     ignoreFieldChange?: boolean;
     /** Indicates whether to perform slaving synchronously. */
@@ -222,6 +186,11 @@ interface SetCurrentSublistTextOptions {
     text: string | string[];
     /** If set to true, the field change and slaving event is ignored. Default is false. */
     ignoreFieldChange?: boolean;
+    /** Indicates whether to perform field sourcing synchronously.
+     * If set to true, sources dependent field information for empty fields synchronously.
+     * Defaults to false – dependent field values are not sourced synchronously.
+     */
+    fireSlavingSync?: boolean;
 }
 
 interface SetValueOptions {
@@ -273,7 +242,7 @@ interface SetSublistValueOptions {
     fieldId: string;
     /** The internal ID of a standard or custom sublist field. */
     line: number;
-    /** 
+    /**
      * The value to set the sublist field to.
      * The value type must correspond to the field type being set. For example:
      * - Text, Radio and Select fields accept string values.
@@ -321,7 +290,7 @@ export interface Field {
     isReadOnly: boolean;
 }
 
-type FieldValue = Date | number | string | string[] | boolean;
+type FieldValue = Date | number | number[] | string | string[] | boolean | null;
 
 /** Almost like a full Record, except without things like save(). */
 export interface ClientCurrentRecord {
@@ -330,6 +299,8 @@ export interface ClientCurrentRecord {
     cancelLine(sublistId: string): Record;
     /** Commits the currently selected line on a sublist. */
     commitLine(options: CancelCommitLineOptions): Record;
+    /** Performs macro operation and returns its result in a plain JavaScript object. */
+    executeMacro: ExecuteMacroFunction;
     /** Returns the line number of the first instance where a specified value is found in a specified column of the matrix. */
     findMatrixSublistLineWIthValue(options: FindSublistLineWithValueOptions): number;
     /** Returns the line number for the first occurrence of a field value in a sublist. */
@@ -350,6 +321,10 @@ export interface ClientCurrentRecord {
     /** Returns the number of lines in a sublist. */
     getLineCount(options: RecordGetLineCountOptions): number;
     getLineCount(sublistId: string): number;
+    /** Provides a macro to be executed. */
+    getMacro(options: { id: string }): Function; // TODO: Test this!
+    /** Provides a plain JavaScript object of available macro objects defined for a record type, indexed by the Macro ID. */
+    getMacros(): { [macroId: string]: Macro };
     /** Returns the number of columns for the specified matrix. */
     getMatrixHeaderCount(options: GetMatrixHeaderCountOptions): number;
     /** Gets the field for the specified header in the matrix. */
@@ -423,7 +398,7 @@ export interface ClientCurrentRecord {
     setText(options: SetFieldTextOptions): void;
     setText(fieldId: string, value: string): void;
     /** Sets the value of a field. */
-    setValue(options: ClientSetValueOptions): void;
+    setValue(options: SetValueOptions): void;
     setValue(fieldId: string, value: FieldValue): void;
     /** The record type. */
     type: Type | string;
@@ -448,6 +423,25 @@ export interface Record extends ClientCurrentRecord {
     /** Sets the value of a sublist field. (standard mode only). */
     setSublistValue(options: SetSublistValueOptions): Record;
     toString(): string;
+}
+
+
+interface ExecuteMacroFunction {
+  (options: { id: string, params: Object }): Object;
+  promise(options: { id: string, params: Object }): Object
+}
+
+interface MacroExecuteFunction {
+    (options?: { params?: Object }): { notifications: any[], response: Object };
+    promise(options?: { params?: Object }): Promise<{ notifications: any[], response: Object }>;
+}
+
+interface Macro {
+    execute: MacroExecuteFunction;
+    id: string;
+    label: string;
+    description: string;
+    attributes: Object;
 }
 
 interface SubmitConfig {
@@ -560,7 +554,7 @@ export var attach: RecordAttachFunction;
 /** Creates a new record by copying an existing record in NetSuite. */
 export var copy: RecordCopyFunction;
 /** Creates a new record. */
-export var create: RecordCreateFunction
+export var create: RecordCreateFunction;
 /** Deletes a record. */
 declare var deleteFunc: RecordDeleteFunction;
 export { deleteFunc as delete };
@@ -590,7 +584,10 @@ export var transform: RecordTransformFunction;
 export declare enum Type {
     ACCOUNT,
     ACCOUNTING_BOOK,
+    ACCOUNTING_CONTEXT,
     ACCOUNTING_PERIOD,
+    ADV_INTER_COMPANY_JOURNAL_ENTRY,
+    ALLOCATION_SCHEDULE,
     AMORTIZATION_SCHEDULE,
     AMORTIZATION_TEMPLATE,
     ASSEMBLY_BUILD,
@@ -598,23 +595,37 @@ export declare enum Type {
     ASSEMBLY_UNBUILD,
     BILLING_ACCOUNT,
     BILLING_CLASS,
+    BILLING_RATE_CARD,
+    BILLING_REVENUE_EVENT,
     BILLING_SCHEDULE,
     BIN,
     BIN_TRANSFER,
     BIN_WORKSHEET,
     BLANKET_PURCHASE_ORDER,
+    BOM,
+    BOM_REVISION,
+    BULK_OWNERSHIP_TRANSFER,
     BUNDLE_INSTALLATION_SCRIPT,
     CALENDAR_EVENT,
     CAMPAIGN,
+    CAMPAIGN_RESPONSE,
     CAMPAIGN_TEMPLATE,
     CASH_REFUND,
     CASH_SALE,
     CHARGE,
+    CHARGE_RULE,
     CHECK,
     CLASSIFICATION,
     CLIENT_SCRIPT,
+    CMS_CONTENT,
+    CMS_CONTENT_TYPE,
+    COMMERCE_CATEGORY,
     COMPETITOR,
+    CONSOLIDATED_EXCHANGE_RATE,
     CONTACT,
+    CONTACT_CATEGORY,
+    CONTACT_ROLE,
+    COST_CATEGORY,
     COUPON_CODE,
     CREDIT_CARD_CHARGE,
     CREDIT_CARD_REFUND,
@@ -623,8 +634,13 @@ export declare enum Type {
     CUSTOMER,
     CUSTOMER_CATEGORY,
     CUSTOMER_DEPOSIT,
+    CUSTOMER_MESSAGE,
     CUSTOMER_PAYMENT,
+    CUSTOMER_PAYMENT_AUTHORIZATION,
     CUSTOMER_REFUND,
+    CUSTOMER_STATUS,
+    CUSTOMER_SUBSIDIARY_RELATIONSHIP,
+    CUSTOM_RECORD,
     CUSTOM_TRANSACTION,
     DEPARTMENT,
     DEPOSIT,
@@ -640,13 +656,18 @@ export declare enum Type {
     EXPENSE_CATEGORY,
     EXPENSE_REPORT,
     FAIR_VALUE_PRICE,
+    FIXED_AMOUNT_PROJECT_REVENUE_RULE,
     FOLDER,
+    FULFILLMENT_REQUEST,
     GENERIC_RESOURCE,
     GIFT_CERTIFICATE,
     GIFT_CERTIFICATE_ITEM,
     GLOBAL_ACCOUNT_MAPPING,
+    GLOBAL_INVENTORY_RELATIONSHIP,
     GOVERNMENT_ISSUED_ID_TYPE,
     HCM_JOB,
+    INBOUND_SHIPMENT,
+    INTERCOMP_ALLOCATION_SCHEDULE,
     INTER_COMPANY_JOURNAL_ENTRY,
     INTER_COMPANY_TRANSFER_ORDER,
     INVENTORY_ADJUSTMENT,
@@ -658,18 +679,24 @@ export declare enum Type {
     INVENTORY_TRANSFER,
     INVOICE,
     ISSUE,
+    ISSUE_PRODUCT,
+    ISSUE_PRODUCT_VERSION,
     ITEM_ACCOUNT_MAPPING,
     ITEM_DEMAND_PLAN,
     ITEM_FULFILLMENT,
     ITEM_GROUP,
+    ITEM_LOCATION_CONFIGURATION,
     ITEM_RECEIPT,
     ITEM_REVISION,
     ITEM_SUPPLY_PLAN,
     JOB,
     JOB_REQUISITION,
+    JOB_STATUS,
+    JOB_TYPE,
     JOURNAL_ENTRY,
     KIT_ITEM,
     KUDOS,
+    LABOR_BASED_PROJECT_REVENUE_RULE,
     LEAD,
     LOCATION,
     LOT_NUMBERED_ASSEMBLY_ITEM,
@@ -680,11 +707,15 @@ export declare enum Type {
     MAP_REDUCE_SCRIPT,
     MARKUP_ITEM,
     MASSUPDATE_SCRIPT,
+    MERCHANDISE_HIERARCHY_LEVEL,
+    MERCHANDISE_HIERARCHY_NODE,
+    MERCHANDISE_HIERARCHY_VERSION,
     MESSAGE,
     MFG_PLANNED_TIME,
     NEXUS,
     NON_INVENTORY_ITEM,
     NOTE,
+    NOTE_TYPE,
     OPPORTUNITY,
     ORDER_SCHEDULE,
     ORGANIZATION_VALUE,
@@ -692,14 +723,20 @@ export declare enum Type {
     OTHER_GOVERNMENT_ISSUED_ID,
     OTHER_NAME,
     PARTNER,
+    PARTNER_CATEGORY,
     PASSPORT,
     PAYCHECK_JOURNAL,
     PAYMENT_ITEM,
+    PAYMENT_METHOD,
     PAYROLL_ITEM,
+    PERIOD_END_JOURNAL,
     PHONE_CALL,
     PORTLET,
     POSITION,
+    PRICE_BOOK,
     PRICE_LEVEL,
+    PRICE_PLAN,
+    PRICING_GROUP,
     PROJECT_EXPENSE_TYPE,
     PROJECT_TASK,
     PROJECT_TEMPLATE,
@@ -710,6 +747,7 @@ export declare enum Type {
     PURCHASE_REQUISITION,
     RATE_PLAN,
     REALLOCATE_ITEM,
+    RECEIVE_INBOUND_SHIPMENT,
     RESOURCE_ALLOCATION,
     RESTLET,
     RETURN_AUTHORIZATION,
@@ -730,6 +768,7 @@ export declare enum Type {
     SHIP_ITEM,
     SOLUTION,
     STATISTICAL_JOURNAL_ENTRY,
+    STORE_PICKUP_FULFILLMENT,
     SUBSCRIPTION,
     SUBSCRIPTION_CHANGE_ORDER,
     SUBSCRIPTION_LINE,
@@ -754,6 +793,7 @@ export declare enum Type {
     TOPIC,
     TRANSFER_ORDER,
     UNITS_TYPE,
+    USAGE,
     USEREVENT_SCRIPT,
     VENDOR,
     VENDOR_BILL,
@@ -766,5 +806,6 @@ export declare enum Type {
     WORK_ORDER,
     WORK_ORDER_CLOSE,
     WORK_ORDER_COMPLETION,
-    WORK_ORDER_ISSUE
+    WORK_ORDER_ISSUE,
+    WORKPLACE
 }

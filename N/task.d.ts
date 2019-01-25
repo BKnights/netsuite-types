@@ -4,16 +4,46 @@ interface CheckStatusOptions {
     taskId: string;
 }
 
-interface TaskCreateOptions {
-    taskType: TaskType;
-    scriptId? :number | string;
-    deploymentId?:number|string;
-    params?: any;
+type TaskCreateOptions =
+    CsvImportTaskCreateOptions
+    | EntityDeduplicationTaskCreateOptions
+    | MapReduceScriptTaskCreateOptions
+    | ScheduledScriptTaskCreateOptions
+    | WorkflowTriggerTaskCreateOptions
+    | SearchTaskCreateOptions;
+
+
+interface SearchTaskCreateOptions {
+    taskType: TaskType.SEARCH
+    savedSearchId?: number;
+    fileId?: number;
+    filePath?: string;
+}
+
+interface SearchTask {
+    submit(): string;
+    addInboundDependency(dependency: ScheduledScriptTask | MapReduceScriptTask): void;
+    toString(): string;
+    savedSearchId: number;
+    fileId: number;
+    filePath: string;
+}
+
+interface SearchTaskStatus {
+    toString(): string;
+    savedSearchId: number;
+    fileId: number;
+    status: TaskStatus;
+    taskId: number;
+}
+
+interface CsvImportTaskCreateOptions {
+    taskType: TaskType.CSV_IMPORT;
     importFile? : File | string;
+    linkedFiles?: {[key: string]: any};
     mappingId?:number|string;
-    queuId? : number|string;
+    queueId? : number|string;
     name? : string;
-    linkedFiles? : Object;
     entityType? : string;
     masterRecordId? : number;
     masterSelectionMode? : string;
@@ -39,12 +69,21 @@ interface CsvImportTaskStatus {
     status: TaskStatus;
 }
 
+interface EntityDeduplicationTaskCreateOptions {
+    taskType: TaskType.ENTITY_DEDUPLICATION;
+    dedupeMode?: DedupeMode;
+    entityType?: string;
+    masterRecordId?: string | number;
+    masterSelectionMode?: MasterSelectionMode;
+    recordIds?: number[];
+}
+
 interface EntityDeduplicationTask {
     submit(): string;
     toString(): string;
     dedupeMode: DedupeMode;
     entityType: string;
-    masterRecordId: number;
+    masterRecordId: number | string;
     masterSelectionMode: MasterSelectionMode;
     recordIds: number[];
 }
@@ -52,6 +91,13 @@ interface EntityDeduplicationTask {
 interface EntityDeduplicationTaskStatus {
     toString(): string;
     status: TaskStatus;
+}
+
+interface MapReduceScriptTaskCreateOptions {
+    taskType: TaskType.MAP_REDUCE;
+    scriptId?: string;
+    deploymentId?: string;
+    params?: any;
 }
 
 interface MapReduceScriptTask {
@@ -72,12 +118,20 @@ interface MapReduceScriptTaskStatus {
     getPendingReduceSize(): number;
     getPercentageCompleted(): number;
     getTotalMapCount(): number;
+    getTotalReduceCount(): number;
     getTotalOutputCount(): number;
     toString(): string;
     scriptId: string;
     deploymentId: string;
     stage: MapReduceStage;
     status: TaskStatus;
+}
+
+interface ScheduledScriptTaskCreateOptions {
+    taskType: TaskType.SCHEDULED_SCRIPT;
+    scriptId?: string;
+    deploymentId?: string;
+    params?: any;
 }
 
 interface ScheduledScriptTask {
@@ -95,11 +149,19 @@ interface ScheduledScriptTaskStatus {
     status: TaskStatus;
 }
 
+interface WorkflowTriggerTaskCreateOptions {
+    taskType: TaskType.WORKFLOW_TRIGGER;
+    params?: any;
+    recordId?: number | string;
+    recordType?: string;
+    workflowId?: number | string;
+}
+
 interface WorkflowTriggerTask {
     submit(): string;
     toString(): string;
     params: any;
-    recordId: number;
+    recordId: number | string;
     recordType: string;
     workflowId: number | string;
 }
@@ -109,7 +171,12 @@ interface WorkflowTriggerTaskStatus {
     status: TaskStatus;
 }
 
-export function create(options: TaskCreateOptions): ScheduledScriptTask | MapReduceScriptTask | CsvImportTask | EntityDeduplicationTask | WorkflowTriggerTask;
+export function create(options: CsvImportTaskCreateOptions):  CsvImportTask;
+export function create(options: EntityDeduplicationTaskCreateOptions): EntityDeduplicationTask;
+export function create(options: MapReduceScriptTaskCreateOptions): MapReduceScriptTask;
+export function create(options: ScheduledScriptTaskCreateOptions): ScheduledScriptTask;
+export function create(options: WorkflowTriggerTaskCreateOptions): WorkflowTriggerTask;
+export function create(options: SearchTaskCreateOptions): SearchTask;
 export function checkStatus(options: CheckStatusOptions): ScheduledScriptTaskStatus | MapReduceScriptTaskStatus | CsvImportTaskStatus | EntityDeduplicationTaskStatus | WorkflowTriggerTaskStatus;
 export enum DedupeEntityType {
     CUSTOMER,
@@ -145,9 +212,10 @@ export enum TaskStatus {
     FAILED,
 }
 export enum TaskType {
-    SCHEDULED_SCRIPT,
-    MAP_REDUCE,
-    CSV_IMPORT,
-    ENTITY_DEDUPLICATION,
-    WORKFLOW_TRIGGER,
+    SCHEDULED_SCRIPT = "SCHEDULED_SCRIPT",
+    MAP_REDUCE = "MAP_REDUCE",
+    CSV_IMPORT = "CSV_IMPORT",
+    ENTITY_DEDUPLICATION = "ENTITY_DEDUPLICATION",
+    WORKFLOW_TRIGGER = "WORKFLOW_TRIGGER",
+    SEARCH = "SEARCH"
 }

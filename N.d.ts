@@ -1,3 +1,4 @@
+import * as N_action from './N/action';
 import * as N_auth from './N/auth';
 import * as N_cache from './N/cache';
 import * as N_config from './N/config';
@@ -14,6 +15,7 @@ import * as N_https from './N/https';
 import * as N_log from './N/log';
 import * as N_plugin from './N/plugin';
 import * as N_portlet from './N/portlet';
+import * as N_query from './N/query';
 import * as N_record from './N/record';
 import * as N_redirect from './N/redirect';
 import * as N_render from './N/render';
@@ -31,6 +33,7 @@ import * as N_ui_dialog from './N/ui/dialog';
 import * as N_ui_message from './N/ui/message';
 import * as N_ui_serverWidget from './N/ui/serverWidget';
 
+export {N_action as action};
 export {N_auth as auth};
 export {N_cache as cache};
 export {N_config as config};
@@ -47,6 +50,7 @@ export {N_https as https};
 export {N_log as log};
 export {N_plugin as plugin};
 export {N_portlet as portlet};
+export {N_query as query};
 export {N_record as record};
 export {N_redirect as redirect};
 export {N_render as render};

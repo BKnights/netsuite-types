@@ -41,15 +41,13 @@ export interface Column {
 
 interface SearchResultGetValueTextOptions {
     name: string;
-    join: string;
+    join?: string;
     summary?: Summary;
 }
 
 export interface Result {
-    getValue(options: SearchResultGetValueTextOptions): boolean | string | string[];
-    getValue(SearchColumn): boolean | string | string[];
-    getText(options: SearchResultGetValueTextOptions): string;
-    getText(SearchColumn): string;
+    getValue(column: Column | string): boolean | string | string[];
+    getText(options: Column | string): string;
     recordType: Type | string;
     id: string;
     columns: Column[];
@@ -77,9 +75,7 @@ export interface ResultSet {
 }
 
 interface FetchOptions {
-    /**
-     * The index of the page range that bounds the desired data.
-     */
+    /** The index of the page range that bounds the desired data. */
     index: number;
 }
 
@@ -118,7 +114,7 @@ export interface PagedData {
     count: number; // Read only
     pageRanges: PageRange[];
     pageSize: number; /** Read Only */
-    searchDefinition: Search; // Read only    
+    searchDefinition: Search; // Read only
 }
 
 interface RunPagedOptions {
@@ -142,7 +138,7 @@ export interface Search {
     searchId: number;
     filters: Filter[];
     filterExpression: any[];
-    columns: (Column[] | string[]);
+    columns: Array<Column | string>;
     title: string;
     id: string;
     isPublic: boolean;
@@ -160,7 +156,7 @@ interface CreateSearchFilterOptions {
     summary?: Summary;
 }
 
-interface CreateSearchColumnOptions {
+export interface CreateSearchColumnOptions {
     name: string;
     join?: string;
     summary?: Summary;
@@ -172,7 +168,7 @@ interface CreateSearchColumnOptions {
 
 interface SearchLookupFieldsOptions {
     type: Type | string;
-    id: string;
+    id: string | number;
     columns: (string | string[]);
 }
 
@@ -211,7 +207,53 @@ interface SearchDeleteFunction {
 }
 
 interface SearchLoadOptions {
+    /** Internal ID or script ID of a saved search. The script ID starts with customsearch. */
     id: string;
+    /**
+     * The search type of the saved search to load. Use a value from the search.Type enum for this parameter.
+     * This parameter is required if the saved search to load uses a standalone search type.
+     * A standalone search type is a search type that does not have a corresponding record type.
+     * Typically, the search type of the saved search can be determined automatically based on the corresponding record type.
+     * In this case, this parameter is not required. For standalone search types, you must specify the search type explicitly using this parameter.
+     *
+     * The following is a list of standalone search types:
+     * - DeletedRecord
+     * - EndToEndTime
+     * - ExpenseAmortPlanAndSchedule
+     * - RevRecPlanAndSchedule
+     * - GlLinesAuditLog
+     * - Crosschargeable
+     * - FinRptAggregateFR
+     * - BillingAccountBillCycle
+     * - BillingAccountBillRequest
+     * - BinItemBalance
+     * - PaymentEvent
+     * - Permission
+     * - GatewayNotification
+     * - TimeApproval
+     * - RecentRecord
+     * - Role
+     * - SavedSearch
+     * - ShoppingCart
+     * - SubscriptionRenewalHistory
+     * - SuiteScriptDetail
+     * - SupplyChainSnapshotDetails
+     * - SystemNote
+     * - TaxDetail
+     * - TimesheetApproval
+     * - Uber
+     * - ResAllocationTimeOffConflict
+     * - ComSearchOneWaySyn
+     * - ComSearchGroupSyn
+     * - Installment
+     * - InventoryBalance
+     * - InventoryNumberBin
+     * - InventoryNumberItem
+     * - InventoryStatusLocation
+     * - InvtNumberItemBalance
+     * - ItemBinNumber
+     */
+    type?: string | Type;
 }
 
 interface SearchLoadFunction {
@@ -219,7 +261,7 @@ interface SearchLoadFunction {
     (options: SearchLoadOptions): Search;
 }
 
-interface SearchCreateOptions {
+export interface SearchCreateOptions {
     type: Type | string;
     filters?: (Filter[] | any[]);
     columns?: (Array<Column | string>);
@@ -236,7 +278,10 @@ interface SearchCreateFunction {
 export enum Type {
     ACCOUNT,
     ACCOUNTING_BOOK,
+    ACCOUNTING_CONTEXT,
+    ACCOUNTING_PERIOD,
     ACTIVITY,
+    ADV_INTER_COMPANY_JOURNAL_ENTRY,
     AMORTIZATION_SCHEDULE,
     AMORTIZATION_TEMPLATE,
     ASSEMBLY_BUILD,
@@ -244,23 +289,38 @@ export enum Type {
     ASSEMBLY_UNBUILD,
     BILLING_ACCOUNT,
     BILLING_ACCOUNT_BILL_CYCLE,
+    BILLING_ACCOUNT_BILL_REQUEST,
     BILLING_CLASS,
+    BILLING_RATE_CARD,
+    BILLING_REVENUE_EVENT,
     BILLING_SCHEDULE,
     BIN,
     BIN_TRANSFER,
     BIN_WORKSHEET,
     BLANKET_PURCHASE_ORDER,
+    BOM,
+    BOM_REVISION,
     BUNDLE_INSTALLATION_SCRIPT,
     CALENDAR_EVENT,
     CAMPAIGN,
     CASH_REFUND,
     CASH_SALE,
     CHARGE,
+    CHARGE_RULE,
     CHECK,
     CLASSIFICATION,
     CLIENT_SCRIPT,
+    CMS_CONTENT,
+    CMS_CONTENT_TYPE,
+    COM_SEARCH_GROUP_SYN,
+    COM_SEARCH_ONE_WAY_SYN,
+    COMMERCE_CATEGORY,
     COMPETITOR,
+    CONSOLIDATED_EXCHANGE_RATE,
     CONTACT,
+    CONTACT_CATEGORY,
+    CONTACT_ROLE,
+    COST_CATEGORY,
     COUPON_CODE,
     CREDIT_CARD_CHARGE,
     CREDIT_CARD_REFUND,
@@ -269,8 +329,12 @@ export enum Type {
     CUSTOMER,
     CUSTOMER_CATEGORY,
     CUSTOMER_DEPOSIT,
+    CUSTOMER_MESSAGE,
     CUSTOMER_PAYMENT,
+    CUSTOMER_PAYMENT_AUTHORIZATION,
     CUSTOMER_REFUND,
+    CUSTOMER_STATUS,
+    CUSTOM_RECORD,
     CUSTOM_TRANSACTION,
     DELETED_RECORD,
     DEPARTMENT,
@@ -279,7 +343,6 @@ export enum Type {
     DESCRIPTION_ITEM,
     DISCOUNT_ITEM,
     DOWNLOAD_ITEM,
-    DRIVERS_LICENSE,
     EMPLOYEE,
     END_TO_END_TIME,
     ENTITY,
@@ -288,27 +351,34 @@ export enum Type {
     EXPENSE_CATEGORY,
     EXPENSE_REPORT,
     FAIR_VALUE_PRICE,
+    FIN_RPT_AGGREGATE_F_R,
+    FIXED_AMOUNT_PROJECT_REVENUE_RULE,
     FOLDER,
+    FULFILLMENT_REQUEST,
     GENERIC_RESOURCE,
     GIFT_CERTIFICATE,
     GIFT_CERTIFICATE_ITEM,
     GLOBAL_ACCOUNT_MAPPING,
+    GLOBAL_INVENTORY_RELATIONSHIP,
     GL_LINES_AUDIT_LOG,
-    GOVERNMENT_ISSUED_ID_TYPE,
-    HCM_JOB,
+    INBOUND_SHIPMENT,
     INTER_COMPANY_JOURNAL_ENTRY,
     INTER_COMPANY_TRANSFER_ORDER,
     INVENTORY_ADJUSTMENT,
+    INVENTORY_BALANCE,
     INVENTORY_COST_REVALUATION,
     INVENTORY_COUNT,
     INVENTORY_DETAIL,
     INVENTORY_ITEM,
     INVENTORY_NUMBER,
+    INVENTORY_STATUS,
+    INVENTORY_STATUS_CHANGE,
     INVENTORY_TRANSFER,
     INVOICE,
     ISSUE,
     ITEM,
     ITEM_ACCOUNT_MAPPING,
+    ITEM_BIN_NUMBER,
     ITEM_DEMAND_PLAN,
     ITEM_FULFILLMENT,
     ITEM_GROUP,
@@ -316,10 +386,11 @@ export enum Type {
     ITEM_REVISION,
     ITEM_SUPPLY_PLAN,
     JOB,
-    JOB_REQUISITION,
+    JOB_STATUS,
+    JOB_TYPE,
     JOURNAL_ENTRY,
     KIT_ITEM,
-    KUDOS,
+    LABOR_BASED_PROJECT_REVENUE_RULE,
     LEAD,
     LOCATION,
     LOT_NUMBERED_ASSEMBLY_ITEM,
@@ -330,25 +401,35 @@ export enum Type {
     MAP_REDUCE_SCRIPT,
     MARKUP_ITEM,
     MASSUPDATE_SCRIPT,
+    MERCHANDISE_HIERARCHY_LEVEL,
+    MERCHANDISE_HIERARCHY_NODE,
+    MERCHANDISE_HIERARCHY_VERSION,
     MESSAGE,
     MFG_PLANNED_TIME,
     NEXUS,
     NON_INVENTORY_ITEM,
     NOTE,
+    NOTE_TYPE,
     OPPORTUNITY,
-    ORGANIZATION_VALUE,
     OTHER_CHARGE_ITEM,
-    OTHER_GOVERNMENT_ISSUED_ID,
     OTHER_NAME,
+    OTHER_NAME_CATEGORY,
     PARTNER,
-    PASSPORT,
+    PARTNER_CATEGORY,
+    PAYCHECK,
     PAYCHECK_JOURNAL,
+    PAYMENT_EVENT,
     PAYMENT_ITEM,
+    PAYMENT_METHOD,
     PAYROLL_ITEM,
+    PCT_COMPLETE_PROJECT_REVENUE_RULE,
+    PERIOD_END_JOURNAL,
+    PERMISSION,
     PHONE_CALL,
     PORTLET,
-    POSITION,
+    PRICE_BOOK,
     PRICE_LEVEL,
+    PRICING_GROUP,
     PROJECT_EXPENSE_TYPE,
     PROJECT_TASK,
     PROJECT_TEMPLATE,
@@ -357,8 +438,8 @@ export enum Type {
     PURCHASE_CONTRACT,
     PURCHASE_ORDER,
     PURCHASE_REQUISITION,
-    RATE_PLAN,
     RECENT_RECORD,
+    RES_ALLOCATION_TIME_OFF_CONFLICT,
     RESOURCE_ALLOCATION,
     RESTLET,
     RETURN_AUTHORIZATION,
@@ -370,6 +451,7 @@ export enum Type {
     REV_REC_TEMPLATE,
     ROLE,
     SALES_ORDER,
+    SALES_ROLE,
     SALES_TAX_ITEM,
     SAVED_SEARCH,
     SCHEDULED_SCRIPT,
@@ -381,7 +463,9 @@ export enum Type {
     SHIP_ITEM,
     SOLUTION,
     STATISTICAL_JOURNAL_ENTRY,
+    STORE_PICKUP_FULFILLMENT,
     SUBSCRIPTION,
+    SUBSCRIPTION_CHANGE_ORDER,
     SUBSCRIPTION_LINE,
     SUBSCRIPTION_PLAN,
     SUBSCRIPTION_RENEWAL_HISTORY,
@@ -389,14 +473,16 @@ export enum Type {
     SUBTOTAL_ITEM,
     SUITELET,
     SUITE_SCRIPT_DETAIL,
+    SUPPLY_CHAIN_SNAPSHOT,
     SUPPORT_CASE,
+    SYSTEM_NOTE,
     TASK,
     TAX_DETAIL,
     TAX_GROUP,
     TAX_PERIOD,
     TAX_TYPE,
     TERM,
-    TERMINATION_REASON,
+    TIME_APPROVAL,
     TIME_BILL,
     TIME_OFF_CHANGE,
     TIME_OFF_PLAN,
@@ -408,6 +494,7 @@ export enum Type {
     TRANSFER_ORDER,
     UBER,
     UNITS_TYPE,
+    USAGE,
     USEREVENT_SCRIPT,
     VENDOR,
     VENDOR_BILL,
@@ -415,12 +502,13 @@ export enum Type {
     VENDOR_CREDIT,
     VENDOR_PAYMENT,
     VENDOR_RETURN_AUTHORIZATION,
+    WEBSITE,
     WORKFLOW_ACTION_SCRIPT,
     WORK_ORDER,
     WORK_ORDER_CLOSE,
     WORK_ORDER_COMPLETION,
     WORK_ORDER_ISSUE,
-    W_S_LOG
+    WORKPLACE
 }
 
 export var create: SearchCreateFunction;

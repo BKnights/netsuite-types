@@ -1,4 +1,7 @@
 import {Operator} from '../search';
+import {ServerResponse} from 'N/http';
+import {AddColumnOptions, AddEditColumnOptions, AddRowOptions, AddRowsOptions} from 'N/portlet';
+import {MessageCreateOptions} from 'N/ui/message';
 
 interface AddButtonOptions {
     /** The internal ID of the button. If you are adding the button to an existing page, the internal ID must be in lowercase, contain no spaces, and include the prefix custpage. */
@@ -24,9 +27,9 @@ interface AddCredentialFieldOptions {
      * The domain that the credentials can be sent to, such as 'www.mysite.com'. Credentials cannot be sent to a domain that is not specified here.
      * This value can be a domain or a list of domains to which the credentials can be sent.
      */
-    restrictToDomains?: string | string[];
+    restrictToDomains: string | string[];
     /** The ID of the script that is allowed to use this credential field. For example, 'customscript_my_script'. */
-    restrictToScriptIds?: string | string[];
+    restrictToScriptIds: string | string[];
     /** The internal ID of the tab or field group to add the credential field to. By default, the field is added to the main section of the form. */
     container?: string;
 }
@@ -98,7 +101,19 @@ interface AddResetButtonOptions {
     label: string;
 }
 
-interface AddSelectOptionOptions {
+interface AddSecretKeyFieldOptions {
+    /** The internal ID of the secret key field. The internal ID must be in lowercase, contain no spaces, and include the prefix custpage if you are adding the field to an existing page. */
+    id: string;
+    label: string;
+    /** Controls whether use of this secret key is restricted to the same user that originally entered the key. By default, the value is false – multiple users can use the key. */
+    restrictToCurrentUser?: boolean;
+    /** The script ID of the script that is allowed to use this field. */
+    restrictToScriptIds?: string|string[];
+    /** The internal ID of the tab or field group to add the field to. By default, the field is added to the main section of the form. */
+    container?: string;
+}
+
+export interface AddSelectOptionOptions {
     value: string;
     text: string;
     isSelected?: boolean;
@@ -169,9 +184,9 @@ interface GetSublistValueOptions {
     /** The internal ID of the sublist. */
     group: string;
     /** The internal ID of the sublist field. */
-    id: number;
+    id: string;
     /** The line number for the sublist field (starts at 0). */
-    line: string;
+    line: number;
 }
 
 interface InsertFieldOptions {
@@ -186,6 +201,13 @@ interface InsertSublistOptions {
     sublist: Sublist;
     /** The internal ID name of the sublist you are inserting a sublist in front of. */
     nextsublist: string;
+}
+
+interface InsertTabOptions {
+    /** The Tab object to insert. */
+    tab: Tab;
+    /** The internal ID name of the tab you are inserting a tab in front of. */
+    nexttab: string;
 }
 
 interface InsertSubtabOptions {
@@ -256,6 +278,11 @@ interface UpdateLayoutTypeOptions {
     layoutType: FieldLayoutType;
 }
 
+interface SendRedirectOptions {
+    /** Set a redirect for the assistant to go back to */
+    response: ServerResponse;
+}
+
 /** Encapsulates a scriptable, multi-step NetSuite assistant. Each page of the assistant is defined by a step. */
 export interface Assistant {
     /** Adds a field to an assistant. */
@@ -296,18 +323,20 @@ export interface Assistant {
     hasErrorHtml(): boolean;
     /** Indicates whether all steps in an assistant are completed. */
     isFinished(): boolean;
-    /** 
+    /**
       * Manages redirects in an assistant.
       * This method also addresses the case in which one assistant redirects to another assistant.
       * In this scenario, the second assistant must return to the first assistant if the user Cancels or Finishes. This method, when used in the second assistant, ensures that users are redirected back to the first assistant.
       */
-    sendRedirect(): void;
+    sendRedirect(options: SendRedirectOptions): void;
     /** Defines a splash message. */
     setSplash(options: SetSplashOptions): void;
     /** Sets the default values of an array of fields that are specific to the assistant. */
-    updateDefaultValues(values: any);
+    updateDefaultValues(values: any): void;
     /** The file cabinet ID of client script file to be used in this assistant. */
     clientScriptFileId: number;
+    /** The relative path to the client script file to be used in this assistant. */
+    clientScriptModulePath: string;
     /** Identifies the current step. You can set any step as the current step. */
     currentStep: AssistantStep;
     /** Error message text for the current step. Optionally, you can use HTML tags to format the message. */
@@ -335,7 +364,7 @@ export interface AssistantStep {
     getSubmittedSublistIds(): string[];
     /** Gets the current value of a sublist field (line item) in a step. */
     getSublistValue(options: GetSublistValueOptions): string;
-    /** Gets the current value(s) of a field or mult-select field. */
+    /** Gets the current value(s) of a field or multi-select field. */
     getValue(options: IDOptions): string | string[];
     /** The help text for a step. */
     helpText: string;
@@ -419,8 +448,7 @@ export interface BaseForm {
     addField(options: AddFieldOptions): Field;
     /** The file cabinet ID of client script file to be used in this form. */
     clientScriptFileId: number;
-    /** The relative path to the client script file to be used in this form.
-        Use this property when attaching an ad-hoc client script to a server-side script. */
+    /** The relative path to the client script file to be used in this form. Use this property when attaching an ad-hoc client script to a server-side script. */
     clientScriptModulePath: string;
     /** The title used for the form. */
     title: string;
@@ -433,8 +461,10 @@ export interface Form extends BaseForm {
     addCredentialField(options: AddCredentialFieldOptions): Field;
     addSecretKeyField(options: AddSecretKeyFieldOptions): Field;
     addFieldGroup(options: AddFieldGroupOptions): FieldGroup;
+    addPageInitMessage(options: MessageCreateOptions): void;
     addPageLink(options: AddPageLinkOptions): void;
-    addResetButton(options: AddResetButtonOptions): Button;
+    addResetButton(options?: AddResetButtonOptions): Button;
+    addSecretKeyField(options: AddSecretKeyFieldOptions): Field;
     addSublist(options: AddSublistOptions): Sublist;
     addSubmitButton(options?: AddSubmitButtonOptions): void;
     addSubtab(options: AddSubtabOptions): Tab;
@@ -443,18 +473,38 @@ export interface Form extends BaseForm {
     getField(options: IDOptions): Field;
     getSublist(options: IDOptions): Sublist;
     getSubtab(options: IDOptions): Tab;
+    getTab(options: { id: string }): Tab;
     getTabs(): Tab[];
     insertField(options: InsertFieldOptions): Field;
     insertSublist(options: InsertSublistOptions): Sublist;
     insertSubtab(options: InsertSubtabOptions): Tab;
-    insertTab(options: InsertSubtabOptions): Tab;
+    insertTab(options: InsertTabOptions): Tab;
     /** Updates the default values of multiple fields on the form. */
     updateDefaultValues(values: any): void;
     removeButton(options: IDOptions): void;
 }
 
-interface List { /** TODO: Document this object? */
-
+export interface List { 
+    /** Adds a button to a list */
+    addButton(options: AddButtonOptions): Button;
+    /** Adds a column to a list */
+    addColumn(options: AddColumnOptions): ListColumn;
+    /** Adds a column containing Edit or Edit/view links to a Suitelet or Portlet list */
+    addEditColumn(options: AddEditColumnOptions): ListColumn;
+    /** Adds a link to a list */
+    addPageLink(options: AddPageLinkOptions): void;
+    /** Adds a single row to a list */
+    addRow(options: AddRowOptions): void;
+    /** Adds multiple rows to a list */
+    addRows(options: AddRowsOptions): void;
+    /** The file cabinet ID of client script file to be used in this list */
+    clientScriptField: number;
+    /** The relative path to the client script file to be used in this list */
+    clientScriptModulePath: string;
+    /** Sets the display style for this list */
+    style: string;
+    /** Sets the List title. */
+    title: string;
 }
 
 interface ListColumn {
@@ -495,10 +545,11 @@ export interface Tab {
     label: string;
 }
 
+export function createList(options: CreateAssistantOptions): List;
+
 export function createAssistant(options: CreateAssistantOptions): Assistant;
-/**
- * Creates a form object.
- */
+
+/** Creates a form object. */
 export function createForm(options: CreateAssistantOptions): Form;
 export enum AssistantSubmitAction {
     BACK,

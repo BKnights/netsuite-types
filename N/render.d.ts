@@ -23,8 +23,8 @@ interface AddRecordOptions {
 interface AddSearchResultsOptions {
     /** Name of the template. */
     templateName: string;
-    /** The search result to add. */
-    searchResult: Result;
+    /** The search results to add. Note: Documentation says this is a single result, but it's actually an array of results. */
+    searchResult: Result[];
 }
 
 interface BOMOptions {
@@ -98,7 +98,7 @@ interface StatementOptions {
     /** Internal ID of the form to use to print the statement. */
     formId?: number;
     /** Date of the oldest transaction to appear on the statement. */
-    startDate?: Date;
+    startDate?: string;
     /** Statement date. NS Docs say this should be a Date object, but in practice it should be a string.*/
     statementDate?: string;
     /** Include only open transactions. */

@@ -1,6 +1,5 @@
-// Place your settings in this file to overwrite default and user settings.
 {
-  "editor.tabSize": 4,
-  "editor.insertSpaces": true,
-  "typescript.check.workspaceVersion": false
+    "files.exclude": {
+        "**/*.js": true
+    }
 }

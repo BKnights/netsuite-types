@@ -1,5 +1,5 @@
 import {Encoding} from './encode';
-import {ClientResponse, ServerRequest, ServerResponse} from './http'
+import {ClientResponse, ServerRequest, ServerResponse, RedirectType} from './http'
 import {Hash, SecretKey} from './crypto';
 
 interface CreateSecureKeyOptions {
@@ -22,7 +22,7 @@ interface CreateSecureStringOptions {
     /**
      * Identifies the encoding that the input string uses. The default value is UTF_8
      */
-    inputEncoding: Encoding;
+    inputEncoding?: Encoding;
 }
 
 interface AppendStringOptions {
@@ -40,7 +40,7 @@ interface AppendSecureStringOptions {
     /**
      * The https.SecureString to append.
      */
-    token: SecureString;
+    secureString: SecureString;
 }
 
 interface ConvertEncodingOptions {
@@ -109,7 +109,7 @@ export interface SecureString {
     toString(): string;
 }
 
-export {ClientResponse, ServerRequest, ServerResponse} from './http';
+export {ClientResponse, ServerRequest, ServerResponse, GetOptions, DeleteOptions, PostOptions, PutOptions, RequestOptions} from './http';
 
 // METHODS \\
 /**
@@ -122,5 +122,6 @@ export var createSecureKey: HttpsCreateSecureKeyFunction;
  */
 export var createSecureString: HttpsCreateSecureStringFunction;
 
-export {get, delete, request, post, put, CacheDuration, Method} from './http';
+export {get, delete as delete, request, post, put, CacheDuration, Method} from './http';
 export {Encoding} from './encode';
+export {RedirectType} from './http';
