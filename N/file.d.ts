@@ -2,8 +2,8 @@ export interface File {
     description: string;
     encoding: string;
     fileType: Type;
-    folder: number;
-    id: number;
+    folder: number | string;
+    id: number | string;
     isInactive: boolean;
     isOnline: boolean;
     isText: boolean;

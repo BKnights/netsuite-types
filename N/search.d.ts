@@ -28,7 +28,7 @@ export interface Column {
     /** Join ID for a search column as a string. */
     join?: string;
     /** Returns the summary type for a search column. */
-    summary?: Summary;
+    summary?: Summary | string;
     /** Formula used for a search column as a string. To set this value, you must use formulatext, formulanumeric, formuladatetime, formulapercent, or formulacurrency. */
     formula?: string;
     /** Label used for the search column. You can only get or set custom labels with this property. */
