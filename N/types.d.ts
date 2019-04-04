@@ -210,7 +210,7 @@ export namespace EntryPoints {
             readonly errors: MapReduceErrorIteratorContainer;
             readonly key: string;
             readonly value: string;
-            readonly write: (key: string, value: string) => void;
+            readonly write: (value:{key: string; value: any}) => void;
         }
         type map = (scriptContext: mapContext) => void;
 
@@ -220,7 +220,7 @@ export namespace EntryPoints {
             readonly errors: MapReduceErrorIteratorContainer;
             readonly key: string;
             readonly values: string[];
-            readonly write: (key: string, value: string) => void;
+            readonly write: (value:{key: string; value: any}) => void;
         }
         type reduce = (scriptContext: reduceContext) => void;
 
