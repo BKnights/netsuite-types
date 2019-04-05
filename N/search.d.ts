@@ -1,13 +1,26 @@
-/** Encapsulates a search filter used in a search. Use the properties for the Filter object to get and set the filter properties. */
+/** 
+ * Encapsulates a search filter used in a search. 
+ * Use the properties for the Filter object to get and set the filter properties. 
+ * 
+ * You create a search filter object with `search.createFilter(options)` and add it to a `search.Search` object that you create with `search.create(options)` or load with search.load(options).
+ * 
+ * Note: NetSuite uses an implicit AND operator with search filters, as opposed to filter expressions which explicitly use either AND and OR operators. Use the following guidelines with the Filter object:
+ * 
+ * * To search for a "none of null" value, meaning do not show results without a value for the specified field, use a value of @NONE@ in the Filter.formula property.
+ * 
+ * * To search on checkbox fields, use the IS operator with a value of T or F to search for checked
+or unchecked fields, respectively.
+ */
 export interface Filter {
     /** Name or internal ID of the search field as a string. */
-    name: string;
+    readonly name: string;
     /** Join ID for the search filter as a string. */
-    join: string;
-    /** Operator used for the search filter. See search.Operator. */
-    operator: Operator;
+    readonly join: string;
+    /** Operator used for the search filter. This value is set with the search.Operator enum. 
+     * The search.Operator enum contains the valid operator values for this property. */
+    readonly operator: Operator;
     /** Summary type for the search filter. Use this property to get or set the value of the summary type. See search.Summary. */
-    summary: Summary;
+    readonly summary: Summary;
     /** Formula used by the search filter. Use this property to get or set the formula used by the search filter. */
     formula: string;
 }
@@ -64,8 +77,8 @@ interface SearchResultSetGetRangeFunction {
 }
 
 interface SearchResultSetEachFunction {
-    promise(callback: (result: Result, index: number) => boolean): Promise<boolean>;
-    (callback: (result: Result, index: number) => boolean): void;
+    promise(callback: (result: Result) => boolean): Promise<boolean>;
+    (callback: (result: Result) => boolean): void;
 }
 
 export interface ResultSet {
@@ -138,7 +151,7 @@ export interface Search {
     searchId: number;
     filters: Filter[];
     filterExpression: any[];
-    columns: Array<Column | string>;
+    columns: (Column | string)[];
     title: string;
     id: string;
     isPublic: boolean;
@@ -148,11 +161,17 @@ export interface Search {
 }
 
 interface CreateSearchFilterOptions {
+    /** Name or internal ID of the search field. */
     name: string;
+    /** Join ID for the search filter. */
     join?: string;
+    /** Operator used for the search filter. Use the search.Operator enum. */
     operator: Operator;
-    values?: (string | Date | number | string[]);
+    /** Values to be used as filter parameters. */
+    values?: string | Date | number | string[] | Date[] | number[];
+    /** Formula used by the search filter. */
     formula?: string;
+    /** Summary type for the search filter. */
     summary?: Summary;
 }
 
@@ -176,13 +195,13 @@ interface SearchLookupFieldsFunction {
     promise(options: SearchLookupFieldsOptions): Promise<any>;
     (options: SearchLookupFieldsOptions): any;
 }
-
+/** Global search keywords string or expression. */
 interface SearchGlobalOptions {
     keywords: string;
 }
 
 interface SearchGlobalFunction {
-    promise(options: SearchGlobalOptions): Promise<Result[]>;
+    promise(options: SearchGlobalOptions): Promise<Result[] | undefined>;
     (options: SearchGlobalOptions): Result[];
 }
 
@@ -263,8 +282,8 @@ interface SearchLoadFunction {
 
 export interface SearchCreateOptions {
     type: Type | string;
-    filters?: (Filter[] | any[]);
-    columns?: (Array<Column | string>);
+    filters?: (CreateSearchFilterOptions[] | any[]);
+    columns?: (Column | string)[];
     title?: string;
     id?: string;
     isPublic?: boolean;
@@ -510,16 +529,75 @@ export enum Type {
     WORK_ORDER_ISSUE,
     WORKPLACE
 }
-
+/**
+ * Creates a new search and returns it as a search.Search object. The search can be modified and run as an on demand
+ * search with Search.run(), without saving it. Alternatively, calling Search.save() will save the search to the
+ * database, so it can be reused later in the UI or loaded with search.load(options). 
+ *
+ * Note: This method is agnostic in terms of its options.filters argument. It can accept input of a single search.Filter
+ * object, an array of search.Filter objects, or a search filter expression. The search.create(options) method also
+ * includes a promise version, search.create.promise(options).
+ *
+ * Important: When you use this method to create a search, consider the following: 
+ *
+ *  * When you define the search, make sure you sort using the field with the most unique values, or sort using multiple
+ *    fields. Sorting with a single field that has multiple identical values can cause the result rows to be in a
+ *    different order each time the search is run. 
+ *
+ *  * You cannot directly create a filter or column for a list/record type field in SuiteScript by passing in its text
+ *    value. You must use the field’s internal ID. If you must use the field’s text value, you can create a filter or
+ *    column with a formula using name: 'formulatext'.
+ *
+ */
 export var create: SearchCreateFunction;
 export var load: SearchLoadFunction;
 declare var deleteFunc: SearchDeleteFunction;
 export { deleteFunc as delete };
 export var duplicates: SearchDuplicatesFunction;
+/**
+ * Performs a global search against a single keyword or multiple keywords.
+ * Similar to the global search functionality in the UI, you can programmatically filter the global
+ * search results that are returned. For example, you can use the following filter to limit the
+ * returned records to Customer records: `'cu: simpson'`
+ * 
+ * @returns search.Result[] as an array of result objects containing these columns: name, type, info1, and info2
+ * Results are limited to 1000 records. If there are no search results, this method returns null.
+ */
 export var global: SearchGlobalFunction;
+/**
+ * Performs a search for one or more body fields on a record. You can use joined-field lookups with this method, with
+ * the following syntax: join_id.field_name The search.lookupFields(options) method also includes a promise version,
+ * search.lookupFields.promise(options). 
+ *
+ * Note that the return contains either an object or a scalar value, depending on whether the looked-up field holds a
+ * single value, or a collection of values. Single select fields are returned as an object with value and text
+ * properties. Multi-select fields are returned as an object with value: text pairs. 
+ *
+ * In the following example, a select field like my_select would return an array of objects containing a value and text
+ * property. This select field contains multiple entries to select from, so each entry would have a numerical id (the
+ * value) and a text display (the text). For "internalid" in this particular code snippet, the sample returns 1234. The
+ * internal id of a record is a single value, so a scalar is returned:
+```
+{
+ internalid: 1234, 
+ firstname: 'Joe', 
+ my_select: [{value: 1, text: 'US Sub'}],
+ my_multiselect: [{"value": "1,2", "text": "US Sub, EU Sub" }]
+}
+```
+ * @returns Returns select fields as an object with value and text properties. Returns multiselect fields as an 
+ array of object with value:text pairs.
+ */
 export var lookupFields: SearchLookupFieldsFunction;
 export function createColumn(options: CreateSearchColumnOptions): Column;
+/** Creates a new search filter as a search.Filter object.
+ * 
+ * Important: You cannot directly create a filter or column for a list/record type field in SuiteScript by passing 
+ * in its text value. You must use the field’s internal ID. If you must use the field’s text value, you can create 
+ * a filter or column with a formula using name: 'formulatext'. 
+ */
 export function createFilter(options: CreateSearchFilterOptions): Filter;
+
 export enum Operator {
     AFTER,
     ALLOF,
