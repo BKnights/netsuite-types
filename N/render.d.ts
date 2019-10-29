@@ -140,6 +140,9 @@ interface TransactionOptions {
     printMode?: PrintMode|string;
     /** The transaction form number. */
     formId?: number;
+    /** Applies when advanced templates are used. Print the document in the customer's locale.
+        If basic printing is used, this parameter is ignored and the transaction form is printed in the customer's locale. */
+    inCustLocale?:boolean;
 }
 
 /** Use this method to create a PDF or HTML object of a bill of material. */
