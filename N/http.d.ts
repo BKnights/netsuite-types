@@ -280,12 +280,8 @@ export interface ServerResponse {
      * Method used to write information to the response.
      * This method only accepts strings. Use writeFile() to pass files.
      */
-    write(output: string): void;
-    /**
-     * Method used to write information to the response.
-     * This method only accepts strings. Use writeFile() to pass files.
-     */
-    write(options: WriteOptions): void;
+    write(output: string | WriteOptions): void;
+
     /**
      * Method used to write a file to the response.
      */
