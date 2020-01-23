@@ -13,7 +13,7 @@ interface SetOptions {
 /** Encapsulates the runtime settings of the currently executing script. */
 interface Script {
     /** Returns the value of a script parameter for the currently executing script. */
-    getParameter(options: GetParameterOptions): string;
+    getParameter(options: GetParameterOptions): number | Date | string | boolean;
     /** Returns a number value for the usage units remaining for the currently executing script. */
     getRemainingUsage(): number;
     /** The deployment ID for the script deployment on the currently executing script. */
