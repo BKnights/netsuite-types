@@ -38,53 +38,35 @@ interface JoinToOptions {
 }
 
 interface JoinFromOptions {
-    /**
-     * The name of the relationship field on which join with other query type is performed For example "salesrep".
-     */
+    /** The name of the relationship field on which join with other query type is performed For example "salesrep". */
     name: string;
 
-    /**
-     * The query type on which is relationship field used to create the join with this component
-     */
+    /** The query type on which is relationship field used to create the join with this component. */
     source: string;
 }
 
 interface CreateConditionOptions {
-    /**
-     * Field (column) id
-     */
+    /** Field (column) id */
     fieldId: string;
 
-    /**
-     * Use the Operator enum.
-     */
+    /** Use the Operator enum. */
     operator: Operator;
 
-    /**
-     * Array of values
-     */
-    values: string | string[];
+    /** Array of values */
+    values: string | boolean | string[] | boolean[]; // You wouldn't have multiple boolean values in an array, obviously. But you might specify it like: [true].
 
-    /**
-     * Aggregate function. Use the Aggregate enum.
-     */
+    /** Aggregate function. Use the Aggregate enum. */
     aggregate?: string;
 }
 
 interface CreateConditionWithFormulaOptions {
-    /**
-     * Formula
-     */
+    /** Formula */
     formula: string;
 
-    /**
-     * Explicitly define value type in case it is not determined correctly from the formula. Use the ReturnType enum.
-     */
+    /** Explicitly define value type in case it is not determined correctly from the formula. Use the ReturnType enum. */
     type?: string;
 
-    /**
-     * Aggregate function. Use the Aggregate enum.
-     */
+    /** Aggregate function. Use the Aggregate enum. */
     aggregate?: string;
 }
 
@@ -159,10 +141,8 @@ interface CreateQueryOptions {
 }
 
 interface LoadQueryOptions {
-    /**
-     * Id of query to be loaded
-     */
-    id: number;
+    /** Id of query to be loaded. */
+    id: string;
 }
 
 interface DeleteQueryOptions {
@@ -179,6 +159,10 @@ interface RunSuiteQLOptions {
     query: string;
 
     params?: Array<string | number | boolean>;
+}
+
+interface RunSuiteQLPagedOptions extends RunSuiteQLOptions {
+    pageSize?: number;
 }
 
 export interface Query {
@@ -428,6 +412,9 @@ export interface Column {
      */
     readonly component: Component;
 
+    /** Holds the name of the query result column. */
+    readonly fieldId: string;
+
     /**
      * Formula.
      * @throws {SuiteScriptError} READ_ONLY when setting the property is attempted
@@ -451,6 +438,8 @@ export interface Column {
      * @throws {SuiteScriptError} READ_ONLY when setting the property is attempted
      */
     readonly groupBy: boolean;
+
+    readonly label: string;
 }
 
 /**
@@ -574,24 +563,67 @@ export interface ResultSet {
      * @governance 10 points for each page returned
      */
     iterator(): Iterator;
+
+    /**
+     * Returns the query result set as an array of mapped results.
+     * A mapped result is a JavaScript object with key-value pairs.
+     * In this object, the key is either the field ID or the alias that was used for the corresponding query.Column object.
+     */
+    asMappedResults(): Array<{ [fieldId: string]: string|boolean|number|null }>;
 }
 
-/**
- * Corresponds to a single row of the ResultSet.
- */
+/** Corresponds to a single row of the ResultSet. */
 export interface Result {
     /**
      * The result values. Value types correspond to the ResultSet.types property. Number and order of values in
      * the array exactly matches the ResultSet.types, ResultSet.columns or Result.columns property.
      * @throws {SuiteScriptError} READ_ONLY when setting the property is attempted
      */
-    readonly values: Array<string | number | null>;
+    readonly values: Array<boolean | string | number | null>;
 
     /**
      * The return columns. This is equivalent to ResultSet.columns.
      * @throws {SuiteScriptError} READ_ONLY when setting the property is attempted
      */
-    readonly columns: Column[];
+    // readonly columns: Column[]; // As of 2019.2, this is not in the Help documentation.
+
+    /**
+     * Returns the query result as a mapped result.
+     * A mapped result is a JavaScript object with key-value pairs.
+     * In this object, the key is either the field ID or the alias that was used for the corresponding query.Column object.
+     */
+    asMap(): { [fieldId: string]: string|boolean|number|null };
+}
+
+/**
+ * One page of the paged query results.
+ * @since 2018.1
+ */
+export interface Page {
+    /**
+     * References the query results contained in this page.
+     */
+    readonly data: ResultSet;
+
+    /**
+     * Indicates whether this page is the first of the paged query results.
+     */
+    readonly isFirst: boolean;
+
+    /**
+     * Indicates whether this page is the last of the paged query results.
+     */
+    readonly isLast: boolean;
+
+    /**
+     * References the set of paged query results that this page is from.
+     */
+    readonly pagedData: PagedData;
+
+    /**
+     * The range of query results for this page.
+     */
+    readonly pageRange: PageRange;
 }
 
 /**
@@ -617,9 +649,9 @@ export interface PagedData {
     /**
      * Standard SuiteScript 2.0 object for iterating through results.
      */
-    iterator(): Iterator;
+    iterator(): PageIterator;
 
-    fetch(index: number): PagedData;
+    fetch(index: number): Page;
 }
 
 /**
@@ -641,6 +673,10 @@ export interface Iterator {
     each(f: (result: Result) => boolean): void;
 }
 
+interface PageIterator {
+    each(f: (result: { value: Page }) => boolean): void;
+}
+
 /**
  * Create a Query object with a single query component based on the given query type.
  * @throws {SuiteScriptError} INVALID_RCRD_TYPE when query type is invalid
@@ -653,7 +689,12 @@ export function create(options: CreateQueryOptions): Query;
  * @throws {SuiteScriptError} WRONG_PARAMETER_TYPE if options isn't object or id isn't number
  * @throws {SuiteScriptError} UNABLE_TO_LOAD_QUERY if query doesn't exist or no permissions to load it
  */
-export function load(options: LoadQueryOptions): Query;
+export const load: QueryLoadFunction;
+
+interface QueryLoadFunction {
+    (options: LoadQueryOptions): Query;
+    promise: (options: LoadQueryOptions) => Promise<Query>;
+}
 
 interface deleteQuery {
   /**
@@ -663,6 +704,7 @@ interface deleteQuery {
    * @throws {SuiteScriptError} UNABLE_TO_DELETE_QUERY if query doesn't exist or no permissions to delete it
    */
   (options: DeleteQueryOptions): Query;
+  promise: (options: DeleteQueryOptions) => Promise<Query>;
 }
 
 export {deleteQuery as delete};
@@ -673,7 +715,138 @@ export {deleteQuery as delete};
  * @throws {SuiteScriptError} WRONG_PARAMETER_TYPE if options isn't object or id isn't number
  * @throws {SuiteScriptError} UNABLE_TO_DELETE_QUERY if query doesn't exist or no permissions to delete it
  */
-export function runSuiteQL(options: RunSuiteQLOptions): ResultSet;
+interface RunSuiteQL {
+    (options: RunSuiteQLOptions): ResultSet;
+    promise: (options: RunSuiteQLOptions) => Promise<ResultSet>;
+}
+
+export const runSuiteQL: RunSuiteQL;
+
+/**
+ * Execute the suiteQL query and return paged results.
+ * @governance 10 units
+ * @throws {SuiteScriptError} MISSING_REQD_ARGUMENT if options or query are undefined
+ * @throws {SuiteScriptError} SSS_INVALID_TYPE_ARG if there's parameter of different type than string/number/boolean in params array
+ *
+ * @since 2020.1
+ */
+interface RunSuiteQLPaged {
+    (options: RunSuiteQLPagedOptions): PagedData;
+    promise: (options: RunSuiteQLPagedOptions) => Promise<PagedData>;
+}
+
+export const runSuiteQLPaged: RunSuiteQLPaged;
+
+export const enum DateId {
+    DAYS_AGO = "dago",
+    DAYS_FROM_NOW = "dfn",
+    HOURS_AGO = "hago",
+    HOURS_FROM_NOW = "hfn",
+    MINUTES_AGO = "nago",
+    MINUTES_FROM_NOW = "nfn",
+    MONTHS_AGO = "mago",
+    MONTHS_FROM_NOW = "mfn",
+    QUARTERS_AGO = "qago",
+    QUARTERS_FROM_NOW = "qfn",
+    SECONDS_AGO = "sago",
+    SECONDS_FROM_NOW = "sfn",
+    WEEKS_AGO = "wago",
+    WEEKS_FROM_NOW = "wfn",
+    YEARS_AGO = "yago",
+    YEARS_FROM_NOW = "yfn"
+}
+
+/**
+ * Special object which can be used as a condition while querying dates
+ *
+ * @since 2019.1
+ */
+interface RelativeDate {
+
+    /**
+     * Start of relative date
+     * @throws {SuiteScriptError} READ_ONLY_PROPERTY when setting the property is attempted
+     *
+     * @since 2019.1
+     */    
+    readonly start: Object;
+
+    /**
+     * End of relative date
+     * @throws {SuiteScriptError} READ_ONLY_PROPERTY when setting the property is attempted
+     *
+     * @since 2019.1
+     */    
+    readonly end: Object;
+
+    /**
+     * Interval of relative date
+     * @throws {SuiteScriptError} READ_ONLY_PROPERTY when setting the property is attempted
+     *
+     * @since 2019.1
+     */    
+    readonly interval: Object;
+
+    /**
+     * Value of relative date
+     * @throws {SuiteScriptError} READ_ONLY_PROPERTY when setting the property is attempted
+     *
+     * @since 2019.1
+     */    
+    readonly value: Object;
+
+    /**
+     * Flag if this relative date represents range
+     * @throws {SuiteScriptError} READ_ONLY_PROPERTY when setting the property is attempted
+     *
+     * @since 2019.1
+     */    
+    readonly isRange: boolean;
+
+    /**
+     * Id of relative date
+     * @throws {SuiteScriptError} READ_ONLY_PROPERTY when setting the property is attempted
+     *
+     * @since 2019.1
+     */    
+    readonly dateId: Object;
+
+    /**
+     * Returns the object type name (query.RelativeDate)
+     *
+     * @since 2019.1
+     */    
+    toString(): string;
+    
+    /**
+     * get JSON format of the object
+     *
+     * @since 2019.1
+     */    
+    toJSON(): any;
+}
+
+interface CreateRelativeDateOptions {
+   /**
+    * The ID of the relative date to create.
+    */
+   dateId: DateId;
+
+   /**
+    * The value to use to create the relative date.
+    */
+   value: number;
+}
+
+
+/**
+ * Creates a query.RelativeDate object that represents a date relative to the current date.
+ * @throws {SuiteScriptError} MISSING_REQD_ARGUMENT If options or id are undefined.
+ * @throws {SuiteScriptError} WRONG_PARAMETER_TYPE If options isn't object or id isn't string.
+ *
+ * @since 2019.2
+ */
+export function createRelativeDate(options: CreateRelativeDateOptions): RelativeDate;
 
 export const enum Operator {
     AFTER = "AFTER",

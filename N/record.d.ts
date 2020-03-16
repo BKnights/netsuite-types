@@ -36,7 +36,7 @@ interface CopyLoadOptions {
     /** The record type. */
     type: Type | string;
     /** The internal ID of the existing record instance in NetSuite. */
-    id: number | string;
+    id: FieldValue | number | string;
     /**
      * Determines whether the new record is dynamic. If set to true, the record is created in dynamic mode. If set to false, the record is created in standard mode. By default, this value is false.
      * - When a SuiteScript 2.0 script creates, copies, loads, or transforms a record in standard mode, the record’s body fields and sublist line items are not sourced, calculated, and validated until the record is saved (submitted) with Record.save(options).
@@ -46,7 +46,7 @@ interface CopyLoadOptions {
      */
     isDynamic?: boolean;
     /** Name-value pairs containing default values of fields in the new record. */
-    defaultValue?: {[fieldId: string]: any};
+    defaultValues?: {[fieldId: string]: any};
 }
 
 interface DetachOptions {
@@ -416,7 +416,7 @@ export interface Field {
     sublistId: string;
 }
 
-type FieldValue = Date | number | number[] | string | string[] | boolean | null;
+export type FieldValue = Date | number | number[] | string | string[] | boolean | null;
 
 /** Almost like a full Record, except without things like save(). */
 export interface ClientCurrentRecord {
@@ -507,7 +507,7 @@ export interface ClientCurrentRecord {
     /** The internal ID of a specific record. */
     id: number;
     /** Inserts a sublist line. */
-    insertLine(options: InsertLineOptions): void;
+    insertLine(options: InsertLineOptions): ClientCurrentRecord; // Issue #132
     /**
      * Indicates whether the record is in dynamic or standard mode.
      * - If set to true, the record is currently in dynamic mode. If set to false, the record is currently in standard mode.
@@ -625,7 +625,7 @@ interface SubmitConfig {
     ignoreMandatoryFields?: boolean;
 }
 
-interface SubmitFieldsOptions {
+export interface SubmitFieldsOptions {
     /** The type of record. */
     type: Type | string;
     /** The internal ID of the existing record instance in NetSuite. */
