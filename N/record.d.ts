@@ -27,7 +27,13 @@ interface AttachRecordOptions {
     id: number | string;
 }
 
-interface CancelCommitLineOptions {
+interface CommitLineOptions {
+    /** The internal ID of the sublist. */
+    sublistId: string;
+    ignoreRecalc? : boolean;
+}
+
+interface CancelLineOptions {
     /** The internal ID of the sublist. */
     sublistId: string;
 }
@@ -421,10 +427,10 @@ export type FieldValue = Date | number | number[] | string | string[] | boolean 
 /** Almost like a full Record, except without things like save(). */
 export interface ClientCurrentRecord {
     /** Cancels the currently selected line on a sublist. */
-    cancelLine(options: CancelCommitLineOptions): Record;
+    cancelLine(options: CancelLineOptions): Record;
     cancelLine(sublistId: string): Record;
     /** Commits the currently selected line on a sublist. */
-    commitLine(options: CancelCommitLineOptions): Record;
+    commitLine(options: CommitLineOptions): Record;
     copy: RecordCopyFunction;
     /** Performs macro operation and returns its result in a plain JavaScript object. */
     executeMacro: ExecuteMacroFunction;

@@ -1,6 +1,6 @@
 export interface File {
     description: string;
-    encoding: string;
+    encoding: string|Encoding;
     fileType: Type;
     folder: number;
     readonly id: number;
