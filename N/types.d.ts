@@ -13,6 +13,7 @@ export var beforeSubmit: EntryPoints.UserEvent.beforeSubmit = (ctx) => {
     }
 };
 */
+
 declare enum UserEventType {
     APPROVE,
     CANCEL,
@@ -38,6 +39,7 @@ declare enum UserEventType {
     VIEW,
     XEDIT,
 }
+
 declare interface UserEventTypes {
     APPROVE: UserEventType;
     CANCEL: UserEventType;
@@ -127,6 +129,7 @@ export namespace EntryPoints {
         interface validateDeleteContext {
             currentRecord: N_record.ClientCurrentRecord;
             sublistId: string;
+            lineCount: number; // As of 2020.2
         }
         type validateDelete = (scriptContext: validateDeleteContext) => boolean;
 
