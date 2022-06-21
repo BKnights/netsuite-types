@@ -87,6 +87,8 @@ export var processorCount: number;
 export var queueCount: number;
 /** Returns the version of NetSuite that the method is called in. For example, the  runtime.version property in an account running NetSuite 2015.2 is 2015.2. */
 export var version: string;
+/** Returns the country of NetSuite that the method is called in. For example, the  runtime.country property in an account running NetSuite 2015.2 is 2015.2. */
+export var country: string;
 /** Returns a runtime.Script that represents the currently executing script. */
 export function getCurrentScript(): Script;
 /** Returns a runtime.Session that represents the user session for the currently executing script. */
