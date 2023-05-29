@@ -15,7 +15,7 @@ type TaskCreateOptions =
 
 interface SearchTaskCreateOptions {
     taskType: TaskType.SEARCH
-    savedSearchId?: number;
+    savedSearchId?: string;
     fileId?: number;
     filePath?: string;
 }
@@ -177,7 +177,7 @@ export function create(options: MapReduceScriptTaskCreateOptions): MapReduceScri
 export function create(options: ScheduledScriptTaskCreateOptions): ScheduledScriptTask;
 export function create(options: WorkflowTriggerTaskCreateOptions): WorkflowTriggerTask;
 export function create(options: SearchTaskCreateOptions): SearchTask;
-export function checkStatus(options: CheckStatusOptions): ScheduledScriptTaskStatus | MapReduceScriptTaskStatus | CsvImportTaskStatus | EntityDeduplicationTaskStatus | WorkflowTriggerTaskStatus;
+export function checkStatus(options: CheckStatusOptions): SearchTaskStatus | ScheduledScriptTaskStatus | MapReduceScriptTaskStatus | CsvImportTaskStatus | EntityDeduplicationTaskStatus | WorkflowTriggerTaskStatus;
 export enum DedupeEntityType {
     CUSTOMER,
     CONTACT,
